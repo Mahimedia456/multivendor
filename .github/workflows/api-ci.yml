@@ -1,0 +1,53 @@
+name: API CI
+on:
+  push:
+    paths: ['chawkbazar-api/**']
+  pull_request:
+
+jobs:
+  php:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: marvel_laravel
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: intl, pdo_mysql, mbstring, curl, dom, fileinfo, tokenizer, json, openssl
+          coverage: none
+
+      - name: Copy env
+        working-directory: chawkbazar-api
+        run: cp .env.example .env
+
+      - name: Configure DB
+        working-directory: chawkbazar-api
+        run: |
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+
+      - name: Composer install
+        working-directory: chawkbazar-api
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Generate key
+        working-directory: chawkbazar-api
+        run: php artisan key:generate
+
+      - name: Migrate
+        working-directory: chawkbazar-api
+        run: php artisan migrate --force

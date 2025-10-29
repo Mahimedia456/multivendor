@@ -1,0 +1,33 @@
+name: Frontend CI
+on:
+  push:
+    paths:
+      - 'admin/**'
+      - 'shop/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - run: corepack enable
+      - run: corepack prepare pnpm@8 --activate
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build Admin
+        working-directory: admin/rest
+        run: pnpm build
+
+      - name: Build Shop
+        working-directory: shop
+        run: pnpm build
