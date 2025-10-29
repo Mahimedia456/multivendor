@@ -1,32 +1,27 @@
 /** @type {import('next-i18next').UserConfig} */
-
-const invariant = require('tiny-invariant');
 const path = require('path');
 
-invariant(
-  process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE,
-  'NEXT_PUBLIC_DEFAULT_LANGUAGE is required, but not set, check your .env file'
-);
-invariant(
-  process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES,
-  'NEXT_PUBLIC_AVAILABLE_LANGUAGES is required, but not set, check your .env file'
-);
+// Safe fallbacks so build never crashes if envs aren't injected yet
+const DEFAULT_LANG =
+  process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE && process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE.trim()
+    ? process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE.trim()
+    : 'en';
 
-const isMultilangEnable =
-  process.env.NEXT_PUBLIC_ENABLE_MULTI_LANG === 'true' &&
-  !!process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES;
+const ENABLE_MULTI =
+  String(process.env.NEXT_PUBLIC_ENABLE_MULTI_LANG || 'false').toLowerCase() === 'true';
+
+const AVAILABLE = (process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES || 'en')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 function generateLocales() {
-  if (isMultilangEnable) {
-    return process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES.split(',');
-  }
-
-  return [process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE];
+  return ENABLE_MULTI && AVAILABLE.length ? AVAILABLE : [DEFAULT_LANG];
 }
 
 module.exports = {
   i18n: {
-    defaultLocale: process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE ?? "en",
+    defaultLocale: DEFAULT_LANG,
     locales: generateLocales(),
   },
   localePath: path.resolve('./public/locales'),
