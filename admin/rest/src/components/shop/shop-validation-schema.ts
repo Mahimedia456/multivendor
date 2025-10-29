@@ -8,7 +8,6 @@ const now = new Date();
  */
 export const shopValidationSchema = yup.object().shape({
   name: yup.string().required('form:error-name-required'),
-
   balance: yup.object().shape({
     payment_info: yup.object().shape({
       email: yup
@@ -26,18 +25,15 @@ export const shopValidationSchema = yup.object().shape({
         .transform((value) => (isNaN(value) ? undefined : value)),
     }),
   }),
-
   settings: yup.object().shape({
     contact: yup
       .string()
       .required('form:error-contact-number-required')
       .matches(phoneRegExp, 'form:error-contact-number-valid-required'),
-
     website: yup
       .string()
       .required('form:error-website-required')
       .matches(URLRegExp, 'form:error-url-valid-required'),
-
     socials: yup.array().of(
       yup.object().shape({
         url: yup.string().when('icon', (icon) => {
@@ -48,7 +44,6 @@ export const shopValidationSchema = yup.object().shape({
         }),
       }),
     ),
-
     shopMaintenance: yup
       .object()
       .when('isShopUnderMaintenance', {
@@ -83,15 +78,12 @@ export const approveShopSchema = yup.object().shape({
 
 /**
  * NEW: schema expected by multi-commission flow in Admin
- * (matches import from: '@/components/shop/shop-validation-schema')
- * Does not conflict with existing exports.
+ * Matches import in:
+ * src/components/shop/approve-view-form-part/multi-commission.tsx
  */
 export const approveShopWithCommissionSchema = yup.object({
   commission: yup.object({
-    type: yup
-      .string()
-      .oneOf(['FLAT', 'PERCENT'])
-      .required('Commission type is required'),
+    type: yup.string().oneOf(['FLAT', 'PERCENT']).required('Commission type is required'),
     rate: yup
       .number()
       .typeError('Rate must be a number')
