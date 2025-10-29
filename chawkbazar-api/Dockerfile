@@ -1,12 +1,17 @@
-# ---- Base PHP image (CLI) with needed extensions ----
+# ---- PHP 8.3 with required extensions ----
 FROM php:8.3-cli
 
-# System deps (git, unzip, pgsql headers, intl deps, etc.)
+# System deps for extensions (gd/exif/bcmath/intl + pgsql)
 RUN apt-get update && apt-get install -y \
-    git unzip libpq-dev libicu-dev libzip-dev libonig-dev libpng-dev \
-    && docker-php-ext-configure intl \
-    && docker-php-ext-install -j$(nproc) intl pdo pdo_pgsql zip \
-    && rm -rf /var/lib/apt/lists/*
+    git unzip \
+    libpq-dev \
+    libicu-dev \
+    libzip-dev \
+    libjpeg-dev libpng-dev libfreetype6-dev \
+ && docker-php-ext-configure intl \
+ && docker-php-ext-configure gd --with-jpeg --with-freetype \
+ && docker-php-ext-install -j$(nproc) intl pdo pdo_pgsql zip gd bcmath exif \
+ && rm -rf /var/lib/apt/lists/*
 
 # Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -14,20 +19,19 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Workdir
 WORKDIR /var/www/html
 
-# Copy app (composer.json/lock first for layer caching)
-COPY composer.json composer.lock ./
-RUN composer install --no-dev -o --no-interaction
-
-# Copy rest of the app
+# Copy app BEFORE composer so "path" repos (packages/marvel) are visible
 COPY . .
 
-# Laravel permissions (storage, cache)
+# Install PHP deps (no dev) - optimize autoload
+RUN composer install --no-dev -o --no-interaction
+
+# Ensure writable dirs
 RUN mkdir -p storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+ && chown -R www-data:www-data storage bootstrap/cache
 
-# Port Laravel will serve on
+# Add entrypoint to run migrations etc on container start
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 8000
-
-# Default command: run Laravel’s dev server binding to $PORT provided by Render
-# (Render injects PORT env var, but we default to 8000 for local/docker run)
-CMD php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+CMD ["/entrypoint.sh"]
