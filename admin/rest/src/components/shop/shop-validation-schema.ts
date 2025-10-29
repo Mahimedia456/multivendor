@@ -1,10 +1,14 @@
 import * as yup from 'yup';
 import { phoneRegExp, URLRegExp } from '@/utils/constants';
 
-const currentDate = new Date();
+const now = new Date();
 
+/**
+ * Main shop form validation
+ */
 export const shopValidationSchema = yup.object().shape({
   name: yup.string().required('form:error-name-required'),
+
   balance: yup.object().shape({
     payment_info: yup.object().shape({
       email: yup
@@ -22,56 +26,78 @@ export const shopValidationSchema = yup.object().shape({
         .transform((value) => (isNaN(value) ? undefined : value)),
     }),
   }),
+
   settings: yup.object().shape({
     contact: yup
       .string()
       .required('form:error-contact-number-required')
       .matches(phoneRegExp, 'form:error-contact-number-valid-required'),
+
     website: yup
       .string()
       .required('form:error-website-required')
       .matches(URLRegExp, 'form:error-url-valid-required'),
+
     socials: yup.array().of(
       yup.object().shape({
-        url: yup.string().when('icon', (data) => {
-          if (data) {
+        url: yup.string().when('icon', (icon) => {
+          if (icon) {
             return yup.string().required('form:error-url-required');
           }
           return yup.string().nullable();
         }),
       }),
     ),
+
     shopMaintenance: yup
       .object()
       .when('isShopUnderMaintenance', {
-        is: (data: boolean) => data,
+        is: (v: boolean) => v,
         then: () =>
           yup.object().shape({
             title: yup.string().required('Title is required'),
             description: yup.string().required('Description is required'),
             start: yup
               .date()
-              .min(
-                currentDate.toDateString(),
-                `Maintenance start date  field must be later than ${currentDate.toDateString()}`,
-              )
+              .min(now, `Maintenance start date must be later than ${now.toDateString()}`)
               .required('Start date is required'),
             until: yup
               .date()
               .required('Until date is required')
-              .min(
-                yup.ref('start'),
-                'Until date must be greater than or equal to start date',
-              ),
+              .min(yup.ref('start'), 'Until date must be greater than or equal to start date'),
           }),
       })
       .notRequired(),
   }),
 });
 
+/**
+ * Existing simple approval schema (kept as-is)
+ */
 export const approveShopSchema = yup.object().shape({
   admin_commission_rate: yup
     .number()
     .typeError('Commission rate must be a number')
     .required('You must need to set your commission rate'),
+});
+
+/**
+ * NEW: schema expected by multi-commission flow in Admin
+ * (matches import from: '@/components/shop/shop-validation-schema')
+ * Does not conflict with existing exports.
+ */
+export const approveShopWithCommissionSchema = yup.object({
+  commission: yup.object({
+    type: yup
+      .string()
+      .oneOf(['FLAT', 'PERCENT'])
+      .required('Commission type is required'),
+    rate: yup
+      .number()
+      .typeError('Rate must be a number')
+      .min(0, 'Rate must be >= 0')
+      .max(100, 'Rate must be <= 100')
+      .required('Rate is required'),
+  }),
+  note: yup.string().nullable(),
 });
