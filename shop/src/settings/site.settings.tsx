@@ -26,8 +26,8 @@ export const siteSettings = {
     address: '',
   },
   logo: {
-    url: '/assets/images/logo.svg',
-    alt: 'ChawkBazar',
+    url: '/assets/images/logo.png',
+    alt: 'Mahi Store',
     href: '/',
     width: 95,
     height: 30,
