@@ -21,7 +21,7 @@ export const Routes = {
   profileUpdate: '/profile-update',
   checkout: '/orders/checkout',
   verifyEmail: '/verify-email',
-  verifyLicense: '/verify-license',
+  
   user: {
     ...routesFactory('/users'),
   },
