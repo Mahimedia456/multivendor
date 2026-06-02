@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: multivendor-api
+    runtime: docker
+    repo: https://github.com/Mahimedia456/multivendor
+    branch: main
+    rootDir: chawkbazar-api
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_NAME
+        value: Marvel
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        value: https://multivendor-api.onrender.com
+
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: debug
+
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      - key: BROADCAST_DRIVER
+        value: log
+      - key: CACHE_DRIVER
+        value: file
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SESSION_DRIVER
+        value: file
+      - key: SESSION_LIFETIME
+        value: "120"
+
+      - key: SHOP_URL
+        value: https://multivendor-shop-three.vercel.app
+      - key: DASHBOARD_URL
+        value: https://multivendor-shop-three.vercel.app
+
+      - key: PUSHER_ENABLED
+        value: "false"
+
+      - key: APP_KEY
+        sync: false
